@@ -19,7 +19,7 @@ import ru.netology.moneytransfer.repository.OperationRepository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,7 +68,7 @@ class TransferServiceTest {
         Card to = new Card("5555666677778888", "11/28", "456", 20_000);
         PendingOperation operation = new PendingOperation("op-1", from.getNumber(), to.getNumber(), 10_000, 100, "RUR");
 
-        when(operationRepository.findById("op-1")).thenReturn(operation);
+        when(operationRepository.takeById("op-1")).thenReturn(operation).thenReturn(null);
         when(cardRepository.findByNumber(from.getNumber())).thenReturn(from);
         when(cardRepository.findByNumber(to.getNumber())).thenReturn(to);
 
@@ -77,18 +77,20 @@ class TransferServiceTest {
         assertEquals("op-1", response.getOperationId());
         assertEquals(89_900, from.getBalanceInMinorUnits());
         assertEquals(30_000, to.getBalanceInMinorUnits());
-        verify(operationRepository).remove("op-1");
         verify(logService).write(from.getNumber(), to.getNumber(), 10_000, 100, "RUR", "CONFIRMED");
+
+        assertThrows(ValidationException.class, () -> transferService.confirm(new ConfirmRequest("op-1", "0000")));
+        verify(operationRepository, times(2)).takeById("op-1");
     }
 
     @Test
     void shouldThrowWhenInvalidConfirmationCode() {
         PendingOperation operation = new PendingOperation("op-1", "1111222233334444", "5555666677778888", 10_000, 100, "RUR");
-        when(operationRepository.findById("op-1")).thenReturn(operation);
+        when(operationRepository.takeById("op-1")).thenReturn(operation);
 
         assertThrows(TransferException.class, () -> transferService.confirm(new ConfirmRequest("op-1", "9999")));
 
-        verify(operationRepository, never()).remove(any());
+        verify(operationRepository).takeById("op-1");
     }
 
     @Test
