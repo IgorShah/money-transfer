@@ -1,0 +1,18 @@
+services:
+  money-transfer:
+    build: .
+    container_name: money-transfer-api
+    ports:
+      - "5500:5500"
+    volumes:
+      - ./logs:/app/logs
+
+  front:
+    profiles: ["front"]
+    build:
+      context: ../card-transfer
+    container_name: money-transfer-front
+    ports:
+      - "3000:3000"
+    depends_on:
+      - money-transfer
