@@ -16,12 +16,7 @@ public class InMemoryOperationRepository implements OperationRepository {
     }
 
     @Override
-    public PendingOperation findById(String id) {
-        return operations.get(id);
-    }
-
-    @Override
-    public void remove(String id) {
-        operations.remove(id);
+    public PendingOperation takeById(String id) {
+        return operations.remove(id);
     }
 }

@@ -5,7 +5,5 @@ import ru.netology.moneytransfer.model.PendingOperation;
 public interface OperationRepository {
     void save(PendingOperation operation);
 
-    PendingOperation findById(String id);
-
-    void remove(String id);
+    PendingOperation takeById(String id);
 }

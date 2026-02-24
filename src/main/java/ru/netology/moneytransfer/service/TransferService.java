@@ -74,7 +74,7 @@ public class TransferService {
     }
 
     public OperationResponse confirm(ConfirmRequest request) {
-        PendingOperation operation = operationRepository.findById(request.getOperationId());
+        PendingOperation operation = operationRepository.takeById(request.getOperationId());
         if (operation == null) {
             throw new ValidationException("Operation not found", 40005);
         }
@@ -104,7 +104,6 @@ public class TransferService {
         toCard.credit(operation.getAmount());
         cardRepository.save(fromCard);
         cardRepository.save(toCard);
-        operationRepository.remove(operation.getId());
 
         logService.write(operation.getFromCard(), operation.getToCard(), operation.getAmount(), operation.getCommission(), operation.getCurrency(), "CONFIRMED");
         return new OperationResponse(operation.getId());
